@@ -7,8 +7,8 @@ var OpenTok = require('../../lib/opentok');
 var app = express();
 
 var opentok;
-var apiKey = process.env.API_KEY;
-var apiSecret = process.env.API_SECRET;
+var apiKey = '47726291';
+var apiSecret = '280ca507595a56c05fd9414809081fcbf9de44fd';
 
 // Verify that the API Key and API Secret are defined
 if (!apiKey || !apiSecret) {
@@ -19,14 +19,16 @@ if (!apiKey || !apiSecret) {
 // Initialize the express app
 app.use(express.static(__dirname + '/public'));
 app.use(bodyParser.json()); // for parsing application/json
-app.use(bodyParser.urlencoded({
-  extended: true
-}));
+app.use(
+  bodyParser.urlencoded({
+    extended: true,
+  })
+);
 
 // Starts the express app
 function init() {
   app.listen(3000, function () {
-    console.log('You\'re app is now ready at http://localhost:3000/');
+    console.log("You're app is now ready at http://localhost:3000/");
   });
 }
 
@@ -51,7 +53,7 @@ app.get('/host', function (req, res) {
   // generate a fresh token for this client
   var token = opentok.generateToken(sessionId, {
     role: 'publisher',
-    initialLayoutClassList: ['focus']
+    initialLayoutClassList: ['focus'],
   });
 
   res.render('host.ejs', {
@@ -60,7 +62,7 @@ app.get('/host', function (req, res) {
     token: token,
     initialBroadcastId: app.get('broadcastId'),
     focusStreamId: app.get('focusStreamId') || '',
-    initialLayout: app.get('layout')
+    initialLayout: app.get('layout'),
   });
 });
 
@@ -74,7 +76,7 @@ app.get('/participant', function (req, res) {
     sessionId: sessionId,
     token: token,
     focusStreamId: app.get('focusStreamId') || '',
-    layout: app.get('layout')
+    layout: app.get('layout'),
   });
 });
 
@@ -85,7 +87,10 @@ app.get('/broadcast', function (req, res) {
   }
   return opentok.getBroadcast(broadcastId, function (err, broadcast) {
     if (err) {
-      return res.send(500, 'Could not get broadcast ' + broadcastId + '. error=' + err.message);
+      return res.send(
+        500,
+        'Could not get broadcast ' + broadcastId + '. error=' + err.message
+      );
     }
     if (broadcast.status === 'started') {
       return res.redirect(broadcast.broadcastUrls.hls);
@@ -100,16 +105,20 @@ app.post('/start', function (req, res) {
     resolution: req.param('resolution'),
     layout: req.param('layout'),
     outputs: {
-      hls: {}
-    }
+      hls: {},
+    },
   };
-  opentok.startBroadcast(app.get('sessionId'), broadcastOptions, function (err, broadcast) {
-    if (err) {
-      return res.send(500, err.message);
+  opentok.startBroadcast(
+    app.get('sessionId'),
+    broadcastOptions,
+    function (err, broadcast) {
+      if (err) {
+        return res.send(500, err.message);
+      }
+      app.set('broadcastId', broadcast.id);
+      return res.json(broadcast);
     }
-    app.set('broadcastId', broadcast.id);
-    return res.json(broadcast);
-  });
+  );
 });
 
 app.get('/stop/:broadcastId', function (req, res) {
@@ -130,7 +139,10 @@ app.post('/broadcast/:broadcastId/layout', function (req, res) {
   if (broadcastId) {
     opentok.setBroadcastLayout(broadcastId, type, null, function (err) {
       if (err) {
-        return res.send(500, 'Could not set layout ' + type + '. Error: ' + err.message);
+        return res.send(
+          500,
+          'Could not set layout ' + type + '. Error: ' + err.message
+        );
       }
       return res.send(200, 'OK');
     });
@@ -147,19 +159,23 @@ app.post('/focus', function (req, res) {
     for (i = 0; i < otherStreams.length; i++) {
       classListArray.push({
         id: otherStreams[i],
-        layoutClassList: []
+        layoutClassList: [],
       });
     }
   }
   classListArray.push({
     id: focusStreamId,
-    layoutClassList: ['focus']
+    layoutClassList: ['focus'],
   });
   app.set('focusStreamId', focusStreamId);
-  opentok.setStreamClassLists(app.get('sessionId'), classListArray, function (err) {
-    if (err) {
-      return res.send(500, 'Could not set class lists.' + err.message);
+  opentok.setStreamClassLists(
+    app.get('sessionId'),
+    classListArray,
+    function (err) {
+      if (err) {
+        return res.send(500, 'Could not set class lists.' + err.message);
+      }
+      return res.send(200, 'OK');
     }
-    return res.send(200, 'OK');
-  });
+  );
 });
